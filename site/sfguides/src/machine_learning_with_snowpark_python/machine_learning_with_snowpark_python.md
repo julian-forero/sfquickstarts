@@ -43,7 +43,12 @@ The source code for this quickstart is available on [GitHub](https://github.com/
 ***Note: If you are planning to run this Quickstart locally, you may have additional requirements, e.g. Docker, Miniconda. Take a look at the source code [README](https://github.com/sfc-gh-mgregory/snowpark-python-hol) for more information on additional local environment requirements.***
 
 ### What You’ll Build 
-- An orchestrated end-to-end Machine Learning pipeline using Snowflake, Snowpark Python, PyTorch, and Apache Airflow
+- An orchestrated end-to-end Machine Learning pipeline to perform monthly forecasts using Snowflake, Snowpark Python, PyTorch, and Apache Airflow this pipeline will:
+    - Incrementally ingest new data monthly from S3 into Snowflake
+    - Generate feature data from the new raw data and generate forecast data for relevant features for the prediction period
+    - Train hundreds of PyTorch TabNet models in parallel and generate new forecasts from the updated models, all inside of Snowflake
+    - Calculate and store model evaluation metrics
+    - Flatten output across hundreds of models in Snowflake to be consumed by end users via BI dashboards, for example
 
 <!-- ------------------------ -->
 ## Use-Case: Predicting Bike Share Trips 
@@ -120,7 +125,8 @@ session.sql("GRANT IMPORT SHARE ON ACCOUNT TO "+project_role).collect()
 session.use_role(state_dict['connection_parameters']['role'])
 ```
 
-
+### Snowpark Highlights:
+- 
 
 <!-- ------------------------ -->
 ## Data Engineering
@@ -135,6 +141,10 @@ Open up the [`01_Data_Engineering`](https://github.com/sfc-gh-mgregory/snowpark-
 - Load the raw data to Snowflake tables
 - Create tables with transformed data for use by Data Scientists
 - Export the relevant DE code as Python modules and function for use in MLOps orchestration later
+
+### Snowpark Highlights:
+- 
+
 
 <!-- ------------------------ -->
 ## Bulk Data Ingest
@@ -160,6 +170,10 @@ bulk_elt(session=session,
          download_base_url='s3://citibike-demo-ml/data/')
 ```
 Define and run the `bulk_elt` function to bulk-load ~94M records into your Snowflake table.
+
+### Snowpark Highlights:
+- 
+
 
 <!-- ------------------------ -->
 ## OPTIONAL Data Science - ARIMA Baseline Model
@@ -191,6 +205,10 @@ ax = sns.lineplot(x='DATE', y='COUNT', data=df)
 - Train an ARIMA timeseries model that includes a seasonality trend as a baseline for model performance for this task
 
 Open up the [`02_Data_Science-ARIMA-Baseline`](https://github.com/sfc-gh-mgregory/snowpark-python-hol/blob/main/02_Data_Science-ARIMA-Baseline.ipynb) notebook, and step through the cells to see how to query data using Snowpark Python's client-side Dataframe API and train a naive timeseries model.
+
+### Snowpark Highlights:
+- 
+
 
 <!-- ------------------------ -->
 ## Data Science Exploration and Modeling
@@ -242,6 +260,9 @@ df = train_snowdf.sort('DATE', ascending=True).to_pandas()
 df, model, feature_columns = train_predict(df, cat_idxs=[-2], cat_dims=[2])
 ```
 
+### Snowpark Highlights:
+- 
+
 
 <!-- ------------------------ -->
 ## ML Engineering Development for ML Ops Pipelines
@@ -258,6 +279,10 @@ Your data scientists have done some exploratory analysis, feature engineering, a
 - Write the relevant functions to Python modules for orchestration
 
 TODO: update this to use vectorized UDF for training and inference 
+
+### Snowpark Highlights:
+- 
+
 
 <!-- ------------------------ -->
 ## Operationalizing ML Code for MLOps
@@ -330,6 +355,10 @@ def citibikeml_monthly_taskflow(files_to_download:list, run_date:str):
 
     return state_dict
 ```
+
+### Snowpark Highlights:
+- 
+
 <!-- ------------------------ -->
 ## Orchestration with Apache Airflow
 Duration: 10
@@ -338,9 +367,18 @@ Duration: 10
 
 Now that we have created Python code that is meant to support operational deployments of our model training and inference tasks, we need to wrap these functions as Airflow tasks for easy orchestration. **Note:** this section requires `Docker Desktop` to run.
 
-**TODO:** Add in Airflow DAG image
+![](./assets/airflow_dag.png)
+
+The core components of the orchestrated DAG are:
+- Incrementally load "new" data from S3 into Snowflake
+- Generate training feature data, as well as forecast data
+- Bulk train models for all tations and run forecasting operation
+- Run an eval job to collect metrics for all models
+- Flatten result tables for easy consumption
 
 Open up the [`05_Airflow_Pipeline`](https://github.com/sfc-gh-mgregory/snowpark-python-hol/blob/main/05_Airflow_Pipeline.ipynb) notebook. We will define Airflow tasks using the `@task()` decorator:
+
+**TODO:** some of the Airflow tasks are failing due to handler execution timeouts during train/predict
 ```python
 @task()
 def generate_forecast_table_task(state_dict:dict, 
@@ -440,6 +478,8 @@ def citibikeml_monthly_taskflow(files_to_download:list, run_date:str):
     return state_dict
 ```
 We use the [Astronomer dev CLI](https://github.com/astronomer/astro-cli) and Docker to spin up a local Airflow instance:
+
+**TODO:** need a lot more info/help in the setup here. I think the Dockerfile needs updating as well.
 ```
 !curl -sSL https://install.astronomer.io | sudo bash -s
 !brew install docker
@@ -458,6 +498,10 @@ We can then run the following to trigger the Airflow pipeline from a command-lin
 --user "admin:admin" \
 -d '{"conf": {"files_to_download": ["202003-citibike-tripdata.csv.zip"], "run_date": "2020_04_01"}}'
 ```
+
+### Snowpark Highlights:
+- 
+
 
 <!-- ------------------------ -->
 ## Integration with Streamlit for Model Consumption
@@ -491,6 +535,9 @@ Navigate to your Streamlit app on port `6006`:
 
 Notice in the app that you can...
 
+### Snowpark Highlights:
+- 
+
 
 <!-- ------------------------ -->
 ## Conclusion
@@ -498,11 +545,13 @@ Duration: 2
 
 In this quickstart we demonstrated how Snowpark Python enables rapid, end-to-end machine learning workload development, deployment, and orchestration. 
 
-For the Data Engineer, Snowpark Python simplifies ELT pipeline development using common Dataframe API syntax, that also exposes the expressiveness and extensiveness of Python. Norming on Python as the language of choice also allows rapid iteration between Data Scientists and Data Engineers, eliminating any expensive code translation lift that can introduce additional time and cost to machine learning workflow development.
+For the **Data Engineer**, Snowpark Python simplifies ELT pipeline development using common Dataframe API syntax, that also exposes the expressiveness and extensiveness of Python. Norming on Python as the language of choice also allows rapid iteration between Data Scientists and Data Engineers, eliminating any expensive code translation lift that can introduce additional time and cost to machine learning workflow development.
 
-For the Data Scientist, Snowpark Python provides a familiar API for querying, acquiring, transforming, and exploring data that resides in Snowflake, while also providing the compute benefits of push-down query execution at little to zero additional time and cost. Snowpark abstracts compute away from the data scientist's IDE of choice, be that a Notebook environment, or more typical IDE. The server-side Snowpark Python runtime enables data scientists to immediately deploy training and inference code to Snowflake with a single line of code. And, all of this is done without having to write a single line of verbose SQL.
+For the **Data Scientist**, Snowpark Python provides a familiar API for querying, acquiring, transforming, and exploring data that resides in Snowflake, while also providing the compute benefits of push-down query execution at little to zero additional time and cost. Snowpark abstracts compute away from the data scientist's IDE of choice, be that a Notebook environment, or more typical IDE. The server-side Snowpark Python runtime enables data scientists to immediately deploy training and inference code to Snowflake with a single line of code. And, all of this is done without having to write a single line of verbose SQL.
 
-For the ML Engineer, Snowpark Python simplifies the hand-off of experimental/analysis code from the data scientist into production-level workflows. By simply extending the experimental code into more robust Python modules, the ML engineer can turn an ML project from experiment to product in little to no time. He or she can then orchestrate a fully operational ML pipeline using the business's orchestration tool of choice, such as Airflow in this example.
+For the **ML Engineer**, Snowpark Python simplifies the hand-off of experimental/analysis code from the data scientist into production-level workflows. By simply extending the experimental code into more robust Python modules, the ML engineer can turn an ML project from experiment to product in little to no time. He or she can then orchestrate a fully operational ML pipeline using the business's orchestration tool of choice, such as Airflow in this example.
+
+While mature organizations may have different individuals and roles assigned to each of these personas, repsonsible for some number of the tasks demonstrated in this Quickstart, it is common for a single Data Scientist to end up being responsible for this entire set of components. Snowpark Python provides a familiar construct for data scientists to take on additional responsibility around moving models and capabilities into produciton-ready pipelines.
 
 Importantly, we showed how working in Snowpark Python allows you to "Bring Your Own IDE" with limited-to-zero dependencies outside of a Python kernel runtime environment, keeping things developer-friendly and allowing teams to work in their preferred dev environments.
 
