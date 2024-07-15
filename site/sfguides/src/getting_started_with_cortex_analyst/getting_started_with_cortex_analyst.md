@@ -14,15 +14,14 @@ tags: Getting Started, Data Science, GenAI, Cortex
 Through this quickstart guide, you will explore how to get started with [Cortex Analyst](https://docs.snowflake.com/LIMITEDACCESS/snowflake-cortex/cortex-analyst-overview) to let business users "talk" to their structured data in Snowflake using natural language.
 
 ### What is Cortex Analyst?
-
-Cortex Analyst is fully managed solution that lets business users "talk" to their structured data in Snowflake using natural language. Powered by state-of-the-art Snowflake hosted LLMs it provides a convenient REST API for seamless integration into any application, while ensuring a high-precision experience.
+Cortex Analyst is fully managed solution that lets business users "talk" to their structured data in Snowflake using natural language. This [Cortex AI](https://www.snowflake.com/en/data-cloud/cortex/) service generates and then executes SQL queries from natural language questions enabling every user to ask analytical questions using familiar English. Powered by state-of-the-art Snowflake hosted LLMs, it provides a convenient REST API for seamless integration into any application, while optimizing for high-precision of results.
 
 ![cortex analyst gif](./assets/cortex.png)
 
 ### Why use Cortex Analyst?
-Cortex Analyst empowers business users to self-service data analysis through conversation, reducing dependency on data teams for ad hoc queries and speeding up time to insights and decisions. Cortex Analyst has a lower total cost of ownership (TCO) and improved accuracy compared to building your own "Talk to Your Data" (TTYD) solution from scratch.
+Cortex Analyst empowers business users to self-service data analysis through conversation, reducing dependency on data teams for ad hoc queries and speeding up time to insights and decisions. Cortex Analyst has a lower total cost of ownership (TCO) and improved accuracy compared to building your own "Talk to Your Data" (TTYD) or Text-to-SQL solution from scratch.
 
-This quickstart will focus on getting started with Cortex Analyst, teaching the mechanics of how to interact with the Cortex Analyst service and Semantic Model definitions to support TTYD on Snowflake.
+This quickstart will focus on getting started with Cortex Analyst, teaching the mechanics of how to interact with the Cortex Analyst service and how to set up the necessary Semantic Model definitions to support TTYD on Snowflake.
 
 ### What you will learn 
 - How to construct and configure a Semantic Model for your data
@@ -37,7 +36,7 @@ This quickstart will focus on getting started with Cortex Analyst, teaching the 
 
 ### What You’ll Build 
 - A Semantic Model over sample financial data
-- A Streamlit app with a conversational interface to Cortex Analyst
+- A Streamlit app with a conversational interface that uses Cortex Analyst
 
 ![streamlit app](./assets/streamlit_app.png)
 
@@ -110,7 +109,7 @@ CREATE OR REPLACE TABLE CORTEX_ANALYST_DEMO.REVENUE_TIMESERIES.DAILY_REVENUE_BY_
 These can also be found in the [**create_snowflake_objects.sql**](https://github.com/Snowflake-Labs/sfguide-getting-started-with-cortex-analyst/blob/main/create_snowflake_objects.sql) file.
 
 <!-- ------------------------ -->
-## Upload and Ingest the Revenue Data and Semantic Model YAML
+## Upload the Revenue Data and Semantic Model YAML
 Duration: 10
 
 > aside positive
@@ -381,10 +380,10 @@ def send_message(prompt: str) -> dict:
 To preview the app, click Run in the preview pane. You can now begin asking natural langague questions about the revenue data in the chat interface (e.g. "What questions can I ask?")
 
 <!-- ------------------------ -->
-## Semantic Model Details
+## Semantic Model YAML Details
 Duration: 10
 
-The semantic model file [`revenue_timeseries.yaml`](https://github.com/Snowflake-Labs/sfguide-getting-started-with-cortex-analyst/blob/main/revenue_timeseries.yaml) is the key that unlocks Cortex Analyst's power. This YAML file dictates the tables, columns, etc. that Analyst can use in order to run queries that answer natural-language questions Let's talk a little about the details of this file:
+The semantic model file [`revenue_timeseries.yaml`](https://github.com/Snowflake-Labs/sfguide-getting-started-with-cortex-analyst/blob/main/revenue_timeseries.yaml) is the key that unlocks Cortex Analyst's ability to deliver high precision results. This YAML file dictates the tables, columns, etc. that Analyst can use in order to run queries that answer natural-language questions. Let's talk a little about the details of this file:
 
 The [Semantic Model](https://docs.snowflake.com/snowflake-cortex/semantic-model-spec) is composed of a number of different fields that help Cortex Analyst understand the specifics of your data:
 - Logical Tables which are composed of Logical Columns
@@ -392,7 +391,7 @@ The [Semantic Model](https://docs.snowflake.com/snowflake-cortex/semantic-model-
 
 Logical Tables are relatively straightforward- these are tables or views within a database. That's it! Pretty simple
 
-Logical Columns get a bit more complicated; a logical column can reference an underlying physical column in a table, or it can be a expression containing one or more physical columns. So, for example, in the [`revenue_timeseries.yaml`](https://github.com/Snowflake-Labs/sfguide-getting-started-with-cortex-analyst/blob/main/revenue_timeseries.yaml), we have a simple logical column `daily_revenue` that is a physical column. In the `daily_revenue` measure defintion, you'll notice that we provide a description, as well as synonyms, data_type, and a default_aggregation, but no `expr` parameter. This is because `revenue` is simply a physical column in the `daily_revenue` table:
+Logical Columns get a bit more complicated; a logical column can reference an underlying physical column in a table, or it can be a expression containing one or more physical columns. So, for example, in the [`revenue_timeseries.yaml`](https://github.com/Snowflake-Labs/sfguide-getting-started-with-cortex-analyst/blob/main/revenue_timeseries.yaml), we have a simple logical column `daily_revenue` that is a physical column. In the `daily_revenue` measure definition, you'll notice that we provide a description, as well as synonyms, data_type, and a default_aggregation, but no `expr` parameter. This is because `revenue` is simply a physical column in the `daily_revenue` table:
 
 ```yaml
 measures:
@@ -459,7 +458,7 @@ For more information about the semantic model, please refer to the [documentatio
 
 <!-- ------------------------ -->
 ## Conclusion and Resources
-Congratulations, you have successfully completed this quickstart! Through this quickstart, we were able to showcase how Cortex Analyst allows business users to ask natural-language questions over their structured data to perform analysis and receive trusted answers to business questions.
+Congratulations, you have successfully completed this quickstart! Through this quickstart, we were able to showcase how Cortex Analyst allows data and developer teams to quickly enable business users to have a solution that enables them to ask natural-language questions over their structured data to perform analysis and receive trusted answers to business questions.
 
 ### What you learned
 - How to create a semantic model YAML file
